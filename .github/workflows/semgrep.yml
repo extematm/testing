@@ -1,0 +1,48 @@
+name: Semgrep Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+
+    container:
+      image: semgrep/semgrep:latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep (SARIF)
+        run: |
+          semgrep scan \
+            --config auto \
+            --sarif \
+            --output semgrep.sarif \
+            --exclude node_modules \
+            --exclude dist \
+            --exclude build \
+            --exclude vendor \
+            --exclude owasp_dependecy_track_docker \
+            --no-error
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: Upload artifact (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-results-${{ github.run_number }}-${{ github.sha }}
+          path: semgrep.sarif
