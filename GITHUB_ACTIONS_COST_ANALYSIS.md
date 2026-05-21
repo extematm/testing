@@ -1,4 +1,4 @@
-# GitHub Actions Cost Analysis — Enterprise Cloud
+# GitHub Actions Cost Analysis — Enterprise Cloud (AI-Generated)
 
 ## Summary
 
