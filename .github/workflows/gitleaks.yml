@@ -42,14 +42,22 @@ jobs:
 
           gitleaks version
 
-      # Run scan (fail on findings)
-      - name: Run Gitleaks
+      - name: Run Gitleaks (incremental scan only)
         run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE="${{ github.event.pull_request.base.sha }}"
+          else
+          BASE="${{ github.event.before }}"
+          fi
+
+          echo "Scanning diff: $BASE..HEAD"
+
           gitleaks detect \
-            --source . \
-            --report-format sarif \
-            --report-path gitleaks.sarif \
-            --exit-code 1
+          --source . \
+          --log-opts="$BASE..HEAD" \
+          --report-format sarif \
+          --report-path gitleaks.sarif \
+          --exit-code 1
 
       # Validate output
       - name: Validate SARIF output
