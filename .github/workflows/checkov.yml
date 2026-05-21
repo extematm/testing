@@ -1,4 +1,4 @@
-name: enterprise-checkov-security
+name: checkov IaC security check
 
 on:
   push:
