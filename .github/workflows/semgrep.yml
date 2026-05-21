@@ -53,21 +53,34 @@ jobs:
       # ----------------------------
       - name: Run Semgrep scan
         run: |
+          BASELINE=""
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE="${{ github.event.pull_request.base.sha }}"
+
+          if [ -n "$BASE" ]; then
+              BASELINE="--baseline-commit $BASE"
+              echo "Using baseline: $BASE"
+          else
+              echo "No baseline available — running full scan"
+          fi
+          fi
+
           semgrep scan \
-            --config p/security-audit \
-            --config p/owasp-top-ten \
-            --baseline-commit ${{ steps.baseline.outputs.base }} \
-            --sarif \
-            --output semgrep.sarif \
-            --skip-unknown-extensions \
-            --max-target-bytes 2000000 \
-            --jobs 4 \
-            --exclude node_modules \
-            --exclude dist \
-            --exclude build \
-            --exclude vendor \
-            --exclude .git \
-            --exclude owasp_dependecy_track_docker
+          --config p/security-audit \
+          --config p/owasp-top-ten \
+          --sarif \
+          --output semgrep.sarif \
+          --skip-unknown-extensions \
+          --max-target-bytes 2000000 \
+          --jobs 4 \
+          $BASELINE \
+          --exclude node_modules \
+          --exclude dist \
+          --exclude build \
+          --exclude vendor \
+          --exclude .git \
+          --exclude owasp_dependecy_track_docker
 
       # ----------------------------
       # Extract severity metrics (CI gating)
