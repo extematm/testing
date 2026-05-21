@@ -1,78 +1,82 @@
-**Repository Workflows**
+**GitHub Workflows — Usage & Configuration**
 
-- **Purpose**: This repository contains automated security scans that run in GitHub Actions. The workflows live in [.github/workflows](.github/workflows) and produce SARIF and artifact outputs used for security reviews.
+Purpose
 
-**Workflows Overview**
+- This document explains how the CI workflows in `/.github/workflows/` are used inside GitHub and how to configure them. It is focused on usage, behavior, and the configuration options you will typically edit — not on installing tools locally.
 
-- **Checkov (IaC)**: [.github/workflows/checkov.yml](.github/workflows/checkov.yml)
-  - **Purpose**: Scans infrastructure-as-code (Terraform, Kubernetes, Dockerfile, GitHub Actions, secrets) for misconfigurations using Checkov.
-  - **Triggers**: `pull_request`, scheduled nightly, and manual `workflow_dispatch`.
-  - **Key steps**: checks out the repo, runs `bridgecrewio/checkov-action`, writes `results.sarif`, and uploads SARIF with `github/codeql-action/upload-sarif@v4`.
-  - **Important notes**: the workflow uses `actions/checkout@v6`. If you see errors resolving `actions/checkout@v` or similar, use a published tag like `actions/checkout@v4` or `actions/checkout@v6` explicitly (avoid incomplete tags). Re-run the workflow after adjusting the tag.
+What lives here
 
-- **Gitleaks (Secrets)**: [.github/workflows/gitleaks.yml](.github/workflows/gitleaks.yml)
-  - **Purpose**: Detects leaked secrets in commits and PR diffs using `gitleaks`.
-  - **Triggers**: `pull_request` and scheduled runs.
-  - **Key steps**: checks out with `actions/checkout@v5` (with `fetch-depth: 0` for full history), installs a pinned `gitleaks` binary, runs an incremental scan against the PR or push range, produces `gitleaks.sarif`, validates the output, uploads SARIF to the Security tab, and stores a run artifact.
-  - **Important notes**: adjust `GITLEAKS_VERSION` in the workflow to pin or update the version. Local runs should match the version used in CI to avoid differences in detection rules.
+- `/.github/workflows/checkov.yml` — Infrastructure-as-code scanning (Checkov). Produces SARIF results and can block PRs.
+- `/.github/workflows/gitleaks.yml` — Secrets scanning (Gitleaks). Detects leaked credentials and uploads SARIF + artifacts.
+- `/.github/workflows/semgrep.yml` — Static application security testing (Semgrep). Runs rule sets, computes a PR baseline, and enforces severity gates.
 
-- **Semgrep (SAST)**: [.github/workflows/semgrep.yml](.github/workflows/semgrep.yml)
-  - **Purpose**: Runs Semgrep rules (security-audit, OWASP top ten) to find code-level issues and fails PRs based on severity gates.
-  - **Triggers**: `pull_request`.
-  - **Key steps**: runs inside the `semgrep/semgrep:latest` container, caches the Semgrep engine and rules, computes an optional PR baseline, runs `semgrep scan` and writes `semgrep.sarif`, evaluates CRITICAL/HIGH counts to gate the PR, generates a prioritized text report, uploads SARIF, and uploads artifacts.
-  - **Important notes**: the workflow uses an exclusions list (see `.semgrepignore`) and a baseline-commit technique for incremental scans. Adjust threshold logic in the `Evaluate severity gate` step to change gating behavior.
+How to use these workflows in GitHub
 
-**Semgrep ignore file**
+- Triggers: workflows run on configured events (`pull_request`, `schedule`, `workflow_dispatch`). For PRs the most common flow is: developer opens PR → workflows run → SARIF and artifacts are uploaded → PR may be blocked based on gating rules.
+- Re-run / manual runs: use the Actions UI → select a workflow run → `Re-run jobs` or use the `workflow_dispatch` event if present to trigger manually.
+- Where results appear: Uploaded SARIF files show up in GitHub under Security → Code scanning. Artifacts are available from the Actions run summary. Comments/annotations (if configured) appear on the PR as comments.
 
-- File: [.github/workflows/.semgrepignore](.github/workflows/.semgrepignore)
-  - **Purpose**: Lists glob patterns that Semgrep should skip during scans. This keeps scans focused on source files and avoids noisy results from generated code, dependencies, and build outputs.
-  - **Common patterns in this repo**:
-    - `codeqlmain/**` — ignore codeql builds or outputs
-    - `vendor/**`, `node*modules/**`, `dist/**`, `build/**` — ignore dependencies and build artifacts
-    - `*.min.js`, \_.bundle.js-style filenames — ignore minified and bundled assets
-  - **Syntax & tips**:
-    - Uses shell-style globs. A leading `**/` matches any directory depth.
-    - Do not prefix patterns with unnecessary escape characters — e.g., an entry like `\\_.bundle.js` is probably incorrect; use `*.bundle.js` or `_*.bundle.js` to match filenames with underscores.
-    - Keep the file minimal and review entries periodically to avoid hiding real issues in important code paths.
+Key configuration areas (what you will edit)
 
-**How to run scans locally**
+- `on:` — change triggers, branches, or add `workflow_dispatch` to allow manual runs.
+- `permissions:` — restrict or grant specific token scopes the workflow needs (e.g., `contents: read`, `security-events: write`). Only grant minimum required privileges.
+- `concurrency:` — ensure only one run per branch/reference with `cancel-in-progress` to avoid duplicate work.
+- `runs-on` / `container:` — select the runner image or container used to execute the job. Changing a container image affects the runtime environment.
+- `env:` and workflow-level environment variables — place tunables here (e.g., feature flags for scanners).
+- `timeout-minutes` — cap runaway runs.
 
-- Semgrep (Docker):
+Workflow-specific configuration notes
 
-```bash
-docker run --rm -v "$(pwd)":/src -w /src semgrep/semgrep:latest \
-	semgrep scan --config p/security-audit --config p/owasp-top-ten --sarif --output semgrep.sarif
-```
+- Checkout action:
+  - `uses: actions/checkout@vX` — pick a published tag (`v4`, `v5`, `v6`) rather than a partial tag like `v`. If you see "Unable to resolve action 'actions/checkout@v'", update to a full tag.
+  - `with: fetch-depth:` — set to `0` if tools need full history (gitleaks incremental scans require full history for certain modes).
 
-- Semgrep (pip):
+- Checkov (`checkov.yml`):
+  - Tunables in the `with:` block: `framework`, `output_format`, `output_file_path`, `download_external_modules`, `compact`, `skip_path`, `skip_check` and `soft_fail`.
+  - Environment flags such as `CHECKOV_EXPERIMENTAL_TERRAFORM_MANAGED_MODULES` are set at the job level for feature toggles.
+  - The workflow uploads SARIF with `github/codeql-action/upload-sarif@v4`. If you need a different category, change the `category` input.
 
-```bash
-pip install semgrep
-semgrep scan --config p/security-audit --sarif --output semgrep.sarif
-```
+- Gitleaks (`gitleaks.yml`):
+  - `GITLEAKS_VERSION` is set inside the workflow—edit to pin a different binary.
+  - The workflow computes a base ref for incremental PR scanning. Modify how `BASE` is computed to change diff behavior.
+  - The step that runs `gitleaks detect` controls output format, report path, and exit code behavior (`--exit-code 1` to fail on findings).
+  - Artifacts are preserved via `actions/upload-artifact` to keep SARIF copies for auditing.
 
-- Checkov (Docker):
+- Semgrep (`semgrep.yml`):
+  - Runs in `semgrep/semgrep:latest` container by default. To control versions, edit the container image tag.
+  - Caching: `actions/cache` is used to cache engine/rules. The cache key is usually based on rule files and OS — adjust if you change where rules live.
+  - Baseline commit: the workflow reads the PR base SHA to run an incremental scan. Ensure `github.event.pull_request.base.sha` is available for PR events; otherwise the workflow will fall back to a full scan.
+  - Severity gating: the workflow computes CRITICAL and HIGH counts from `semgrep.sarif` and fails the job based on thresholds. Adjust the numeric thresholds in the `Evaluate severity gate` step to relax or harden gating.
+  - Exclusions: semgrep uses `--exclude` flags and an ignore file at `/.github/workflows/.semgrepignore` — edit that file to add or remove excluded paths.
 
-```bash
-docker run --rm -v "$(pwd)":/src bridgecrew/checkov:latest -d /src --output-file results.sarif --output sarif
-```
+Working with SARIF, artifacts, and annotations
 
-- Gitleaks (local):
+- SARIF upload: `github/codeql-action/upload-sarif@v4` is used to publish findings to the Security → Code scanning UI. The `category` input groups findings by scanner.
+- Artifacts: `actions/upload-artifact` stores copies of SARIF, text reports, or tooling outputs for later inspection. Keep artifact names stable for automation.
+- PR annotations/comments: some workflows add PR comments (for example using `actions/github-script`) when failures occur. Edit that step to change the message or to disable comments.
 
-```bash
-gitleaks detect --source . --report-format sarif --report-path gitleaks.sarif --exit-code 1
-```
+Common edits you may want to make
 
-**Viewing results in GitHub**
+- Change PR trigger branches (edit the `pull_request: branches:` list).
+- Pin or update `actions/checkout@vX` across all workflows for consistency.
+- Increase/decrease semgrep gating thresholds in `semgrep.yml` by editing the numeric checks in the `Evaluate severity gate` step.
+- Add or remove paths in `skip_path` (Checkov) or `--exclude` / `.semgrepignore` (Semgrep) to tune scan scope.
+- For Gitleaks, change `GITLEAKS_VERSION` to a newer or older release; ensure CI runners can download the artifact URL used in the workflow.
 
-- **SARIF uploads**: Workflows upload SARIF files (e.g., `results.sarif`, `gitleaks.sarif`, `semgrep.sarif`) using `github/codeql-action/upload-sarif@v4`. Once uploaded, findings appear under the repository **Security → Code scanning** tab.
-- **Artifacts**: Some workflows also save SARIF and text reports as artifacts for debugging (see `actions/upload-artifact`).
+Best practices when editing workflows
 
-**Troubleshooting & best practices**
+- Make small, targeted edits and validate on a non-protected branch before merging to `main`.
+- Pin action and tool versions for reproducibility. Use explicit tags for actions (e.g., `actions/checkout@v4`).
+- Keep `permissions:` minimal and review scopes when adding new steps that interact with the GitHub API.
+- Use `concurrency:` to avoid duplicated scans and reduce CI costs.
+- Don’t use `.semgrepignore` to hide real source files — only exclude generated artifacts, dependencies, and third-party code.
 
-- **Checkout action errors**: If CI fails with `Unable to resolve action 'actions/checkout@v'` or similar, update the `uses:` line to a full, published tag like `actions/checkout@v4` or `actions/checkout@v6` in the workflow file.
-- **Pin tool versions**: For deterministic CI behavior, pin versions (e.g., `GITLEAKS_VERSION`) instead of always using `latest` in production workflows.
-- **Baseline and gating**: For large repos, prefer baseline-based incremental scans to reduce noise. Adjust the High/Critical thresholds in `semgrep.yml` as your team matures.
-- **Review .semgrepignore regularly**: Don't use the ignore file to hide real issues — only exclude generated code, external libraries, and build artifacts.
+If you want, I can:
 
-If you'd like, I can also open a PR that pins `actions/checkout` to a specific stable version across these workflows, or adjust the `.semgrepignore` entries (for example removing accidental escape sequences).
+- Open a PR that pins `actions/checkout` to a stable version across workflows.
+- Clean up suspicious entries in `/.github/workflows/.semgrepignore` (for example stray backslashes) and commit the changes.
+- Adjust semgrep gating thresholds or Checkov `skip_check` lists in a branch for review.
+
+---
+
+Edit the workflow files under `/.github/workflows/` to change behavior; if you want, tell me which exact change(s) you'd like and I will prepare a PR.
