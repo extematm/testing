@@ -1,29 +1,35 @@
-name: checkov-security-scan
+name: enterprise-checkov-security
 
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  schedule:
+    - cron: "0 2 * * *" # nightly UTC
   workflow_dispatch:
 
 permissions:
   contents: read
   security-events: write
   actions: read
+  pull-requests: write
 
 concurrency:
-  group: checkov-${{ github.ref }}
+  group: checkov-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  scan:
-    name: IaC Security Scan
+  checkov:
+    name: Enterprise IaC Security Scan
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    env:
+      CHECKOV_EXPERIMENTAL_TERRAFORM_MANAGED_MODULES: true
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v6
 
       - name: Run Checkov
@@ -32,21 +38,60 @@ jobs:
         with:
           quiet: true
           soft_fail: false
-          framework: terraform,kubernetes,dockerfile,secrets,github_actions
+
+          framework: >
+            terraform,
+            kubernetes,
+            dockerfile,
+            github_actions,
+            secrets
 
           output_format: cli,sarif
           output_file_path: console,results.sarif
 
           download_external_modules: true
+          compact: true
 
           skip_path: |
             node_modules
-            .terraform
             dist
             build
+            vendor
+            .terraform
+            coverage
+
+          skip_check: |
+            CKV_GHA_7
 
       - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
+          category: checkov
+
+      - name: Annotate PR
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v4
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `
+              **Checkov security scan failed**
+
+              Security policy violations were detected.
+
+              Review:
+              - Security tab → Code scanning alerts
+              - Workflow logs for exact failing controls
+
+              Merge is blocked until resolved or explicitly waived.
+              `
+            })
+
+      - name: Fail Build
+        if: steps.checkov.outcome == 'failure'
+        run: exit 1
