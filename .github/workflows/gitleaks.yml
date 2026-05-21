@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+  schedule:
+    - cron: "0 2 * * *"
+
 permissions:
   contents: read
   security-events: write
@@ -25,42 +28,37 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ----------------------------
-      # Install Gitleaks (stable)
-      # ----------------------------
+      # Install pinned Gitleaks
       - name: Install Gitleaks
         run: |
           GITLEAKS_VERSION="8.30.1"
 
-          curl -L -o gitleaks.tar.gz \
+          curl -sSL -o gitleaks.tar.gz \
             https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz
 
           tar -xzf gitleaks.tar.gz
           sudo mv gitleaks /usr/local/bin/gitleaks
+          chmod +x /usr/local/bin/gitleaks
+
           gitleaks version
 
-      # ----------------------------
-      # Run scan → SARIF
-      # ----------------------------
+      # Run scan (fail on findings)
       - name: Run Gitleaks
         run: |
           gitleaks detect \
             --source . \
             --report-format sarif \
             --report-path gitleaks.sarif \
-            --exit-code 0
+            --exit-code 1
 
-      # ----------------------------
-      # Verify output exists (important)
-      # ----------------------------
+      # Validate output
       - name: Validate SARIF output
+        if: always()
         run: |
-          ls -lah
           test -f gitleaks.sarif
+          ls -lah gitleaks.sarif
 
-      # ----------------------------
-      # Upload to Security tab
-      # ----------------------------
+      # Upload findings
       - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v4
@@ -68,9 +66,7 @@ jobs:
           sarif_file: gitleaks.sarif
           category: gitleaks-secrets
 
-      # ----------------------------
-      # Artifact backup
-      # ----------------------------
+      # Preserve audit artifact
       - name: Upload artifact
         if: always()
         uses: actions/upload-artifact@v4

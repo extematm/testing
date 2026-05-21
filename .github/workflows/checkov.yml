@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   checkov:
-    name: Enterprise IaC Security Scan
+    name: checkov IaC security check
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
