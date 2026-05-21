@@ -6,42 +6,99 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: semgrep-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   security-events: write
 
 jobs:
   semgrep:
-    name: semgrep (production gate)
+    name: semgrep (production SAST)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
+    # ----------------------------
+    # Semgrep engine (auto-update safe pattern)
+    # ----------------------------
     container:
       image: semgrep/semgrep:latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # required for baseline diff scanning
 
-      # 1. Run scan (CRITICAL = failing CI gate)
-      - name: Run Semgrep (fail on critical issues)
+      # ----------------------------
+      # Cache Semgrep rule & analysis cache
+      # ----------------------------
+      - name: Cache Semgrep
+        uses: actions/cache@v5
+        with:
+          path: /root/.cache/semgrep
+          key: semgrep-${{ runner.os }}-${{ hashFiles('**/*.yml', '**/*.yaml', '**/*.py', '**/*.js', '**/*.ts') }}
+          restore-keys: |
+            semgrep-${{ runner.os }}-
+
+      # ----------------------------
+      # Resolve scan mode (PR vs push)
+      # ----------------------------
+      - name: Compute scan mode
+        id: scan
         run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "mode=pr" >> $GITHUB_OUTPUT
+            echo "base=${{ github.event.pull_request.base.sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "mode=full" >> $GITHUB_OUTPUT
+          fi
+
+      # ----------------------------
+      # Semgrep scan (production grade)
+      # ----------------------------
+      - name: Run Semgrep (SAST)
+        run: |
+          BASELINE=""
+
+          if [ "${{ steps.scan.outputs.mode }}" = "pr" ]; then
+            BASELINE="--baseline-commit ${{ steps.scan.outputs.base }}"
+          fi
+
           semgrep scan \
             --config auto \
             --sarif \
             --output semgrep.sarif \
-            --severity ERROR
+            --severity ERROR \
+            --skip-unknown-extensions \
+            --max-target-bytes 2000000 \
+            --error \
+            $BASELINE \
+            --exclude node_modules \
+            --exclude dist \
+            --exclude build \
+            --exclude vendor \
+            --exclude .git \
+            --exclude owasp_dependecy_track_docker
 
-      # 2. Upload to GitHub Security tab
+      # ----------------------------
+      # Upload SARIF (Security tab)
+      # ----------------------------
       - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep.sarif
+          category: semgrep-sast
 
-      # 3. Artifact for debugging
+      # ----------------------------
+      # Artifact (debug + audit trail)
+      # ----------------------------
       - name: Upload artifact
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: semgrep-results-${{ github.run_number }}-${{ github.sha }}
+          name: semgrep-${{ github.run_number }}-${{ github.sha }}
           path: semgrep.sarif
