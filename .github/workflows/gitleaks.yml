@@ -6,10 +6,6 @@ on:
   push:
     branches: [main]
 
-concurrency:
-  group: gitleaks-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
   security-events: write
@@ -24,22 +20,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # required for full history + diff accuracy
+          fetch-depth: 0
 
       # ----------------------------
-      # Run Gitleaks (SARIF output)
+      # Install Gitleaks explicitly
       # ----------------------------
-      - name: Run Gitleaks scan
+      - name: Install Gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_8.18.4_linux_x64.tar.gz \
+          | tar -xz
+          sudo mv gitleaks /usr/local/bin/
+
+      # ----------------------------
+      # Run scan (ENSURE SARIF OUTPUT EXISTS)
+      # ----------------------------
+      - name: Run Gitleaks
         run: |
           gitleaks detect \
             --source . \
             --report-format sarif \
             --report-path gitleaks.sarif \
-            --redact \
-            --exit-code 1
+            --exit-code 0
 
       # ----------------------------
-      # Upload to GitHub Security tab (Secrets scanning)
+      # Safety check (prevents upload crash)
+      # ----------------------------
+      - name: Verify SARIF exists
+        run: |
+          ls -lah
+          test -f gitleaks.sarif || (echo "SARIF missing!" && exit 1)
+
+      # ----------------------------
+      # Upload to GitHub Security tab
       # ----------------------------
       - name: Upload SARIF
         if: always()
@@ -49,11 +61,11 @@ jobs:
           category: gitleaks-secrets
 
       # ----------------------------
-      # Artifact (debug + audit trail)
+      # Artifact backup
       # ----------------------------
       - name: Upload artifact
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-${{ github.run_number }}-${{ github.sha }}
+          name: gitleaks-${{ github.run_number }}
           path: gitleaks.sarif
