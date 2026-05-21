@@ -16,5 +16,13 @@ What lives here
 What is advised to run based on noise ()
 
 1. Checkov is specific for IaC and creates more noise on findings due to specific detection methods, so multiple errors might be mapped to same action - MIDDLE NOISE LEVEL
+
 2. GitLeaks is rather low on noise due to only checking new code for leaks - LOW NOISE LEVEL
-3.
+
+3. Semgrep is Static Code analysis and has rather low to medium noise - LOW/MEDIUM NOISE LEVEL
+
+4. Devskim is mainly for security and therefor manadatory, but provides a medium to high noise level depending on codebase - MEDIUM/HIGH NOISE LEVEL
+
+5. Megalinter is utlizing multiple linters and therefor provides a high noise level - HIGH NOISE LEVEL
+
+6. Scorecard has a high noise level, but folows strong security practices and should be enabled on all repositories - HIGH NOISE LEVEL
