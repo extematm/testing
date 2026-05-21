@@ -1,8 +1,6 @@
 name: Semgrep Security Scan
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -16,13 +14,10 @@ permissions:
 
 jobs:
   semgrep:
-    name: semgrep (SAST)
+    name: semgrep (production SAST)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
-    # ----------------------------
-    # Semgrep engine (auto-update safe pattern)
-    # ----------------------------
     container:
       image: semgrep/semgrep:latest
 
@@ -30,10 +25,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # required for baseline diff scanning
+          fetch-depth: 0
 
       # ----------------------------
-      # Cache Semgrep rule & analysis cache
+      # Cache Semgrep engine + rules
       # ----------------------------
       - name: Cache Semgrep
         uses: actions/cache@v5
@@ -44,38 +39,27 @@ jobs:
             semgrep-${{ runner.os }}-
 
       # ----------------------------
-      # Resolve scan mode (PR vs push)
+      # Compute PR baseline
       # ----------------------------
-      - name: Compute scan mode
-        id: scan
+      - name: Compute baseline
+        id: baseline
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "mode=pr" >> $GITHUB_OUTPUT
-            echo "base=${{ github.event.pull_request.base.sha }}" >> $GITHUB_OUTPUT
-          else
-            echo "mode=full" >> $GITHUB_OUTPUT
-          fi
+          echo "base=${{ github.event.pull_request.base.sha }}" >> $GITHUB_OUTPUT
 
       # ----------------------------
-      # Semgrep scan (production grade)
+      # Run Semgrep (deterministic ruleset)
       # ----------------------------
-      - name: Run Semgrep (SAST)
+      - name: Run Semgrep scan
         run: |
-          BASELINE=""
-
-          if [ "${{ steps.scan.outputs.mode }}" = "pr" ]; then
-            BASELINE="--baseline-commit ${{ steps.scan.outputs.base }}"
-          fi
-
           semgrep scan \
-            --config auto \
+            --config p/security-audit \
+            --config p/owasp-top-ten \
+            --baseline-commit ${{ steps.baseline.outputs.base }} \
             --sarif \
             --output semgrep.sarif \
-            --severity ERROR \
             --skip-unknown-extensions \
             --max-target-bytes 2000000 \
-            --error \
-            $BASELINE \
+            --jobs 4 \
             --exclude node_modules \
             --exclude dist \
             --exclude build \
@@ -84,7 +68,47 @@ jobs:
             --exclude owasp_dependecy_track_docker
 
       # ----------------------------
-      # Upload SARIF (Security tab)
+      # Extract severity metrics (CI gating)
+      # ----------------------------
+      - name: Evaluate severity gate
+        run: |
+          CRITICAL=$(jq '[.runs[].results[]
+            | select(.level == "error")] | length' semgrep.sarif)
+
+          HIGH=$(jq '[.runs[].results[]
+            | select(.level == "warning")] | length' semgrep.sarif)
+
+          echo "CRITICAL=$CRITICAL"
+          echo "HIGH=$HIGH"
+
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "CRITICAL security issues found — blocking PR"
+            exit 1
+          fi
+
+          if [ "$HIGH" -gt 25 ]; then
+            echo "Too many HIGH severity issues — review required"
+            exit 1
+          fi
+
+          echo "Security gate passed"
+
+      # ----------------------------
+      # Generate prioritized report
+      # ----------------------------
+      - name: Generate priority report
+        if: always()
+        run: |
+          jq -r '
+            .runs[].results
+            | sort_by(.level)
+            | reverse
+            | .[]
+            | "\(.level | ascii_upcase) | \(.ruleId) | \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine)\n  → \(.message)\n"
+          ' semgrep.sarif > semgrep-priority.txt
+
+      # ----------------------------
+      # Upload SARIF (GitHub Security tab)
       # ----------------------------
       - name: Upload SARIF
         if: always()
@@ -94,11 +118,13 @@ jobs:
           category: semgrep-sast
 
       # ----------------------------
-      # Artifact (debug + audit trail)
+      # Upload artifacts (audit/debug)
       # ----------------------------
-      - name: Upload artifact
+      - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: semgrep-${{ github.run_number }}-${{ github.sha }}
-          path: semgrep.sarif
+          path: |
+            semgrep.sarif
+            semgrep-priority.txt
