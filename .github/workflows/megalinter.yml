@@ -1,0 +1,61 @@
+name: MegaLinter
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: megalinter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  megalinter:
+    name: MegaLinter
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run MegaLinter
+        uses: oxsecurity/megalinter@v9.5.0
+        env:
+          # Core execution
+          DEFAULT_WORKSPACE: ${{ github.workspace }}
+          VALIDATE_ALL_CODEBASE: true
+          DISABLE_ERRORS: false
+
+          # Performance / noise control
+          FILTER_REGEX_EXCLUDE: "(node_modules|dist|build|coverage|vendor|.terraform)"
+          GIT_HISTORY_DEPTH: "0"
+
+          # Optional: improve CI signal
+          APPLY_FIXES: none
+          MEGALINTER_CONFIG: .mega-linter.yml
+
+      - name: Upload MegaLinter reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: megalinter-reports-${{ github.run_number }}
+          path: |
+            megalinter-reports
+            mega-linter.log
+
+      - name: Upload SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: megalinter-reports/megalinter-report.sarif
+          category: megalinter
