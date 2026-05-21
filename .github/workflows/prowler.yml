@@ -14,9 +14,9 @@ jobs:
   prowler:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: prowler-cloud/prowler@5.27
+      - uses: prowler-cloud/prowler@5
         with:
           provider: iac
           output-formats: sarif json-ocsf
