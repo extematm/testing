@@ -1,0 +1,59 @@
+name: Gitleaks Secrets Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: gitleaks-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  gitleaks:
+    name: gitleaks (secrets scanning)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # required for full history + diff accuracy
+
+      # ----------------------------
+      # Run Gitleaks (SARIF output)
+      # ----------------------------
+      - name: Run Gitleaks scan
+        run: |
+          gitleaks detect \
+            --source . \
+            --report-format sarif \
+            --report-path gitleaks.sarif \
+            --redact \
+            --exit-code 1
+
+      # ----------------------------
+      # Upload to GitHub Security tab (Secrets scanning)
+      # ----------------------------
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks-secrets
+
+      # ----------------------------
+      # Artifact (debug + audit trail)
+      # ----------------------------
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gitleaks-${{ github.run_number }}-${{ github.sha }}
+          path: gitleaks.sarif
