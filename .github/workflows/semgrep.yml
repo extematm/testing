@@ -20,6 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # ----------------------------
+    # Semgrep engine (auto-update safe pattern)
+    # ----------------------------
     container:
       image: semgrep/semgrep:latest
 
@@ -27,25 +30,52 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # required for baseline diff scanning
 
+      # ----------------------------
+      # Cache Semgrep rule & analysis cache
+      # ----------------------------
       - name: Cache Semgrep
         uses: actions/cache@v5
         with:
           path: /root/.cache/semgrep
           key: semgrep-${{ runner.os }}-${{ hashFiles('**/*.yml', '**/*.yaml', '**/*.py', '**/*.js', '**/*.ts') }}
+          restore-keys: |
+            semgrep-${{ runner.os }}-
 
       # ----------------------------
-      # Run Semgrep JSON (needed for enrichment)
+      # Resolve scan mode (PR vs push)
       # ----------------------------
-      - name: Run Semgrep
+      - name: Compute scan mode
+        id: scan
         run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "mode=pr" >> $GITHUB_OUTPUT
+            echo "base=${{ github.event.pull_request.base.sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "mode=full" >> $GITHUB_OUTPUT
+          fi
+
+      # ----------------------------
+      # Semgrep scan (production grade)
+      # ----------------------------
+      - name: Run Semgrep (SAST)
+        run: |
+          BASELINE=""
+
+          if [ "${{ steps.scan.outputs.mode }}" = "pr" ]; then
+            BASELINE="--baseline-commit ${{ steps.scan.outputs.base }}"
+          fi
+
           semgrep scan \
             --config auto \
-            --json \
-            --output semgrep.json \
+            --sarif \
+            --output semgrep.sarif \
+            --severity ERROR \
             --skip-unknown-extensions \
             --max-target-bytes 2000000 \
+            --error \
+            $BASELINE \
             --exclude node_modules \
             --exclude dist \
             --exclude build \
@@ -54,87 +84,7 @@ jobs:
             --exclude owasp_dependecy_track_docker
 
       # ----------------------------
-      # Build SARIF with "blocking" marker
-      # ----------------------------
-      - name: Build SARIF (with blocking metadata)
-        run: |
-          jq '
-          {
-            version: "2.1.0",
-            runs: [
-              {
-                tool: {
-                  driver: {
-                    name: "semgrep",
-                    rules: []
-                  }
-                },
-                results: [
-                  .results[] |
-                  {
-                    ruleId: .check_id,
-                    message: {
-                      text:
-                        (if (.extra.severity=="ERROR" and (.check_id|test("injection|rce|ssrf|auth|sql|shell"))) then
-                          "[BLOCKER] " + .extra.message
-                        else
-                          .extra.message
-                        end)
-                    },
-                    locations: [
-                      {
-                        physicalLocation: {
-                          artifactLocation: {
-                            uri: .path
-                          },
-                          region: {
-                            startLine: .start.line
-                          }
-                        }
-                      }
-                    ],
-
-                    level:
-                      if (.extra.severity=="ERROR" and (.check_id|test("injection|rce|ssrf|auth|sql|shell"))) then "error"
-                      elif (.extra.severity=="ERROR") then "warning"
-                      else "note"
-                      end,
-
-                    properties: {
-                      blocking:
-                        (.extra.severity=="ERROR" and (.check_id|test("injection|rce|ssrf|auth|sql|shell")))
-                    }
-                  }
-                ]
-              }
-            ]
-          }' semgrep.json > semgrep.sarif
-
-      # ----------------------------
-      # Determine WHAT caused CI failure
-      # ----------------------------
-      - name: Show blocking findings (CI reason)
-        run: |
-          echo "🚨 BLOCKING FINDINGS (caused CI failure):"
-
-          jq -r '
-            .results[]
-            | select(.extra.severity=="ERROR"
-            and (.check_id|test("injection|rce|ssrf|auth|sql|shell")))
-            | "❌ " + .check_id + " -> " + .path + ":" + (.start.line|tostring)
-          ' semgrep.json
-
-          COUNT=$(jq '[.results[] | select(.extra.severity=="ERROR" and (.check_id|test("injection|rce|ssrf|auth|sql|shell")))] | length' semgrep.json)
-
-          echo "BLOCKING_COUNT=$COUNT"
-
-          if [ "$COUNT" -gt 0 ]; then
-            echo "❌ Pipeline failed due to BLOCKING security findings"
-            exit 1
-          fi
-
-      # ----------------------------
-      # Upload SARIF (GitHub Security tab)
+      # Upload SARIF (Security tab)
       # ----------------------------
       - name: Upload SARIF
         if: always()
@@ -144,7 +94,7 @@ jobs:
           category: semgrep-sast
 
       # ----------------------------
-      # Artifact
+      # Artifact (debug + audit trail)
       # ----------------------------
       - name: Upload artifact
         if: always()
