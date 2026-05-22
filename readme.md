@@ -25,6 +25,6 @@ What is advised to run based on noise (LOW, MEDIUM, HIGH)
 
 5. Megalinter is utlizing multiple linters and therefor provides a high noise level - HIGH NOISE LEVEL / Security LOW
 
-6. Scorecard has a high noise level, but folows strong security practices and should be enabled on all repositories - HIGH NOISE LEVEL / Security MEDIUM
+6. Scorecard has a high noise level, but folows strong security practices in a very large scope on repository level. Because this scanner runs on a very large scope and repository level, while alerting on important security missings, configs... should this scanner be repository mandatory - HIGH NOISE LEVEL / Security VERY HIGH
 
-For security reasons running all actions is advised, but in case of too much noise try disabling the high noise first, with lowest impact on security in mind.
+For security reasons running all actions is advised, but in case of too much noise try, disabling the high noise first (marked in short descriptions) and ensure they also have lowest impact before removing too many scanners.
