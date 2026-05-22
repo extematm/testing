@@ -30,3 +30,5 @@ What is advised to run based on noise (LOW, MEDIUM, HIGH)
 ---
 
 ## For security reasons running all actions is advised, but in case of too much noise, try disabling the high noise first and ensure they also have lowest security impact before removing too many scanners.
+
+asdasdasd
