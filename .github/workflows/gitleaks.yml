@@ -1,5 +1,9 @@
 name: Gitleaks Secrets Scan
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   #push:
   #  branches: [main, master]
@@ -8,10 +12,6 @@ on:
 
   schedule:
     - cron: "0 2 * * *"
-
-permissions:
-  contents: read
-  security-events: write
 
 concurrency:
   group: gitleaks-${{ github.ref }}
