@@ -1,5 +1,9 @@
 name: checkov IaC security check
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   #push:
   #  branches: [main, master]
@@ -8,12 +12,6 @@ on:
   schedule:
     - cron: "0 2 * * *" # nightly UTC
   workflow_dispatch:
-
-permissions:
-  contents: read
-  security-events: write
-  actions: read
-  pull-requests: write
 
 concurrency:
   group: checkov-${{ github.workflow }}-${{ github.ref }}
