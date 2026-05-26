@@ -4,10 +4,11 @@ This directory contains architecture decision records for significant technical 
 
 ## Index
 
-| ADR                                                         | Title                                                                                | Status   | Date       |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------- | ---------- |
-| [ADR-001](decisions/ADR-001-github-actions-and-prompts.md)  | Use GitHub Actions for CI/CD and Security, Store Agent Prompts in .github/prompts    | Accepted | 2025-05-26 |
-| [ADR-002](decisions/ADR-002-cursor-ide-prompt-structure.md) | Store AI prompt guidance in Cursor IDE folder structure instead of `.github/prompts` | Accepted | 2025-05-26 |
+| ADR                                                                            | Title                                                                                | Status                | Date       |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------- | ---------- |
+| [ADR-001](decisions/ADR-001-github-actions-and-prompts.md)                     | Use GitHub Actions for CI/CD and Security, Store Agent Prompts in .github/prompts    | Accepted              | 2025-05-26 |
+| [ADR-002](decisions/ADR-002-cursor-ide-prompt-structure.md)                    | Store AI prompt guidance in Cursor IDE folder structure instead of `.github/prompts` | Superseded by ADR-003 | 2025-05-26 |
+| [ADR-003](decisions/ADR-003-cursor-prompt-filename-extension-and-structure.md) | Use `.cursorrules/rules/*.mdc` as the canonical Cursor prompt guidance store         | Accepted              | 2026-05-26 |
 
 ## Reading ADRs
 
