@@ -52,6 +52,7 @@ jobs:
 
       # ----------------------------
       # Run Semgrep (deterministic ruleset)
+      # --config p/owasp-top-ten --> Can be added after line 72 to include OWASP Top 10 ruleset (will create more noise)
       # ----------------------------
       - name: Run Semgrep scan
         run: |
@@ -70,7 +71,6 @@ jobs:
 
           semgrep scan \
           --config p/security-audit \
-          --config p/owasp-top-ten \
           --sarif \
           --output semgrep.sarif \
           --skip-unknown-extensions \

@@ -31,4 +31,29 @@ What is advised to run based on noise (LOW, MEDIUM, HIGH)
 
 ## For security reasons running all actions is advised, but in case of too much noise, try disabling the high noise first and ensure they also have lowest security impact before removing too many scanners.
 
-asdasdasd
+## Architecture
+
+This project uses **GitHub Actions** for all CI/CD, security scanning, and code quality enforcement. Custom prompts for AI-driven development are stored in `.github/prompts/`.
+
+**Why GitHub Actions?** See [ADR-001](docs/decisions/ADR-001-github-actions-and-prompts.md) for the full architectural rationale, alternatives considered, and consequences.
+
+### Key Directories
+
+- `/.github/workflows/` — GitHub Actions CI/CD and security scanning pipelines
+- `/.github/prompts/` — Custom coding instructions for AI agents (code simplification, documentation standards, etc.)
+- `/docs/decisions/` — Architecture Decision Records (ADRs) documenting major design choices
+
+### Design Principles
+
+- **Automation first**: Security and linting policies are enforced via CI/CD, not manual review
+- **Agent consistency**: Custom prompts guide AI tools to follow project conventions
+- **Version control**: All infrastructure and guidance lives in Git for auditability and history
+
+## Contributing
+
+Before contributing:
+
+1. Read [docs/decisions/](docs/decisions/) to understand key architectural choices
+2. Review `.github/prompts/documentation-and-adrs.prompt.md` for documentation and ADR standards
+3. Review `.github/prompts/code-simplification.prompt.md` for code style guidelines
+4. Ensure all tests pass and no security checks are blocked on your PR
