@@ -40,7 +40,8 @@ This project uses **GitHub Actions** for all CI/CD, security scanning, and code 
 ### Key Directories
 
 - `/.github/workflows/` — GitHub Actions CI/CD and security scanning pipelines
-- `/.github/prompts/` — Custom coding instructions for AI agents (code simplification, documentation standards, etc.)
+- `/.cursorrules/rules/` — Canonical Cursor IDE prompt guidance rule files (`*.mdc`)
+- `/.github/prompts/` — Legacy VS Code prompt guidance representation (`*.prompt.md`) kept for compatibility
 - `/docs/decisions/` — Architecture Decision Records (ADRs) documenting major design choices
 
 ### Design Principles
@@ -54,6 +55,6 @@ This project uses **GitHub Actions** for all CI/CD, security scanning, and code 
 Before contributing:
 
 1. Read [docs/decisions/](docs/decisions/) to understand key architectural choices
-2. Review `.github/prompts/documentation-and-adrs.prompt.md` for documentation and ADR standards
-3. Review `.github/prompts/code-simplification.prompt.md` for code style guidelines
+2. Review `.cursorrules/rules/documentation-and-adrs.mdc` for documentation and ADR standards
+3. Review `.cursorrules/rules/code-simplification.mdc` for code style guidelines
 4. Ensure all tests pass and no security checks are blocked on your PR
