@@ -1,5 +1,9 @@
 name: DevSkim
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   #push:
   #  branches: ["main", "master"]
@@ -12,10 +16,6 @@ jobs:
   lint:
     name: DevSkim
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
