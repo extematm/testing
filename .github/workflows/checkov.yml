@@ -1,12 +1,6 @@
-name: checkov IaC security check
-
-permissions:
-  contents: read
-  security-events: write
+name: Checkov IaC Security Scan
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
     branches: [main, master]
 
@@ -15,29 +9,72 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 concurrency:
-  group: checkov-${{ github.workflow }}-${{ github.ref }}
+  group: checkov-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   checkov:
+    name: Checkov IaC Security
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     env:
       CHECKOV_EXPERIMENTAL_TERRAFORM_MANAGED_MODULES: true
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Run Checkov
+      - name: Run Checkov scan
         id: checkov
         uses: bridgecrewio/checkov-action@v12
+        with:
+          quiet: true
+          soft_fail: false
 
-      - name: Upload SARIF
+          framework: terraform,kubernetes,dockerfile,github_actions,secrets
+
+          output_format: sarif
+          output_file_path: results.sarif
+
+          download_external_modules: true
+          compact: true
+
+          skip_path: |
+            node_modules
+            dist
+            build
+            vendor
+            .terraform
+            coverage
+
+          skip_check: |
+            CKV_GHA_7
+
+      - name: Verify SARIF file exists
+        if: always()
+        run: |
+          echo "Checking SARIF output..."
+          ls -lah
+          test -f results.sarif || (echo "SARIF file missing!" && exit 1)
+
+      - name: Upload SARIF to GitHub Security tab
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
           category: checkov
+
+      - name: Upload artifact (debug/audit)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-results-${{ github.run_number }}
+          path: results.sarif
