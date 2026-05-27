@@ -1,0 +1,17 @@
+# Semgrep ignore file (.semgrepignore)
+
+# This file tells Semgrep which files and directories to exclude from static analysis.
+
+# Each line is a glob pattern. Matching files/folders will be skipped during scanning.
+
+# Use this to ignore dependencies, build outputs, and generated files that are not source code.
+
+codeqlmain/**
+vendor/**
+node*modules/**
+dist/**
+build/**
+owasp_dependecy_track_docker/**
+**/Open-Source-Notices/**
+*.min.js
+\_.bundle.js
