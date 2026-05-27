@@ -1,0 +1,11 @@
+{
+  "GlobsToIgnore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.venv/**",
+    "**/__pycache__/**"
+  ],
+  "RulesToIgnore": ["DS126858"],
+  "ExtensionsToIgnore": [".min.js", ".map"]
+}

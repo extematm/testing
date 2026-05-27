@@ -1,0 +1,31 @@
+quiet: true
+compact: true
+soft-fail: false
+
+framework:
+  - terraform
+  - kubernetes
+  - dockerfile
+  - github_actions
+  - secrets
+
+download-external-modules: true
+
+skip-path:
+  - node_modules
+  - dist
+  - build
+  - vendor
+  - .terraform
+  - coverage
+
+skip-check:
+  - CKV_GHA_7
+
+output:
+  - cli
+  - sarif
+
+output-file-path:
+  - console
+  - results.sarif

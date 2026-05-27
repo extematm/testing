@@ -5,8 +5,8 @@ permissions:
   security-events: write
 
 on:
-  #push:
-  #  branches: ["main", "master"]
+  push:
+    branches: ["main", "master"]
   pull_request:
     branches: ["main", "master"]
   schedule:

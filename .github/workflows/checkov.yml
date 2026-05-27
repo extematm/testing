@@ -5,12 +5,14 @@ permissions:
   security-events: write
 
 on:
-  #push:
-  #  branches: [main, master]
+  push:
+    branches: [main, master]
   pull_request:
     branches: [main, master]
+
   schedule:
-    - cron: "0 2 * * *" # nightly UTC
+    - cron: "0 2 * * *"
+
   workflow_dispatch:
 
 concurrency:
@@ -19,7 +21,6 @@ concurrency:
 
 jobs:
   checkov:
-    name: checkov IaC security check
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -28,38 +29,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Run Checkov
         id: checkov
         uses: bridgecrewio/checkov-action@v12
-        with:
-          quiet: true
-          soft_fail: false
-
-          framework: >
-            terraform,
-            kubernetes,
-            dockerfile,
-            github_actions,
-            secrets
-
-          output_format: cli,sarif
-          output_file_path: console,results.sarif
-
-          download_external_modules: true
-          compact: true
-
-          skip_path: |
-            node_modules
-            dist
-            build
-            vendor
-            .terraform
-            coverage
-
-          skip_check: |
-            CKV_GHA_7
 
       - name: Upload SARIF
         if: always()
@@ -67,29 +41,3 @@ jobs:
         with:
           sarif_file: results.sarif
           category: checkov
-
-      - name: Annotate PR
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v4
-        with:
-          script: |
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `
-              **Checkov security scan failed**
-
-              Security policy violations were detected.
-
-              Review:
-              - Security tab → Code scanning alerts
-              - Workflow logs for exact failing controls
-
-              Merge is blocked until resolved or explicitly waived.
-              `
-            })
-
-      - name: Fail Build
-        if: steps.checkov.outcome == 'failure'
-        run: exit 1
