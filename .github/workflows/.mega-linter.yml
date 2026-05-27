@@ -1,0 +1,12 @@
+ENABLE:
+  - PYTHON
+
+PYTHON_BLACK_ARGUMENTS: "--line-length 88"
+PYTHON_ISORT_ARGUMENTS: "--profile black"
+PYTHON_FLAKE8_ARGUMENTS: "--max-line-length=88"
+
+FILTER_REGEX_EXCLUDE: >
+  (^|/)(\.git|\.venv|venv|node_modules|dist|build|__pycache__)/
+
+APPLY_FIXES: none
+FAIL_IF_UPDATED_SOURCES: true
