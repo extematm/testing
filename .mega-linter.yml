@@ -1,9 +1,8 @@
-ENABLE:
-  - PYTHON
-
-PYTHON_BLACK_ARGUMENTS: "--line-length 88"
-PYTHON_ISORT_ARGUMENTS: "--profile black"
-PYTHON_FLAKE8_ARGUMENTS: "--max-line-length=88"
+ENABLE_LINTERS:
+  - PYTHON_BLACK
+  - PYTHON_RUFF
+  - PYTHON_MYPY
+  - PYTHON_BANDIT
 
 FILTER_REGEX_EXCLUDE: >
   (^|/)(\.git|\.venv|venv|node_modules|dist|build|__pycache__)/
