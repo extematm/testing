@@ -11,8 +11,8 @@ on:
   # https://github.com/ossf/scorecard/blob/main/docs/checks.md#maintained
   schedule:
     - cron: "31 14 * * 0"
-  #push:
-  #  branches: ["main", "master"]
+  push:
+    branches: ["main", "master"]
   pull_request:
     branches: ["main", "master"]
 
