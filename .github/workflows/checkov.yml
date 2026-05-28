@@ -1,8 +1,8 @@
 name: Checkov IaC Security Scan
 
 on:
-  #push:
-  #  branches: [main, master]
+  push:
+    branches: [main, master]
   pull_request:
     branches: [main, master]
   schedule:
@@ -49,12 +49,13 @@ jobs:
       - name: Verify SARIF exists
         run: |
           ls -lah
-          test -f checkov.sarif
+          find checkov.sarif -type f
+          test -f checkov.sarif/results_sarif.sarif
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: checkov.sarif
+          sarif_file: checkov.sarif/results_sarif.sarif
           category: checkov
 
       - name: Upload artifact
@@ -62,4 +63,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: checkov-results
-          path: checkov.sarif
+          path: checkov.sarif/results_sarif.sarif

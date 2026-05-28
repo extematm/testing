@@ -6,6 +6,7 @@
     "**/.venv/**",
     "**/__pycache__/**"
   ],
+  "_comment": "Ignore DevSkim weak hash rule for legacy checksum usage",
   "RulesToIgnore": ["DS126858"],
   "ExtensionsToIgnore": [".min.js", ".map"]
 }
