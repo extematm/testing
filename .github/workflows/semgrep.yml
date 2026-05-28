@@ -117,11 +117,18 @@ jobs:
         if: always()
         run: |
           jq -r '
-            .runs[].results
-            | sort_by(.level)
-            | reverse
-            | .[]
-            | "\(.level | ascii_upcase) | \(.ruleId) | \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine)\n  → \(.message)\n"
+            .runs[].results[]
+            | [
+                (.level // "unknown" | ascii_upcase),
+                (.ruleId // "no-rule"),
+                (
+                  (.locations[0].physicalLocation.artifactLocation.uri // "unknown")
+                  + ":"
+                  + ((.locations[0].physicalLocation.region.startLine // 0) | tostring)
+                ),
+                (.message.text // "No message")
+              ]
+            | "\(.[0]) | \(.[1]) | \(.[2])\n  → \(.[3])\n"
           ' semgrep.sarif > semgrep-priority.txt
 
       # ----------------------------
