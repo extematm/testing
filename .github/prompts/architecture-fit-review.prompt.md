@@ -202,6 +202,9 @@ Capture the following in your review notes where relevant:
 - any new dependencies and where they originate
 - whether a new abstraction is justified or premature
 - whether the change should be refactored for better architecture
+- any specific patterns or conventions that are followed or violated
+- the potential long-term maintenance implications of the change
+- the impact on the overall system structure and design integrity
 
 ## Architectural Risk Factors
 
