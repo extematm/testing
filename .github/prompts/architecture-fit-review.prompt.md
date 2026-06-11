@@ -16,6 +16,10 @@ This review assesses whether a proposed code change is architecturally sound, pr
 - Detect breaches of layering, module ownership, or subsystem boundaries.
 - Highlight opportunities to reuse existing abstractions and conventions.
 - Produce a concise verdict with actionable architectural feedback.
+- Avoid overemphasizing implementation details at the expense of architectural integrity.
+- Focus on the overall fit of the change withing the system's architecture rather than specific code style or minor design choices.
+- Visualize the change/changes in the context of the existing architecture to identify potential issues or improvements.
+- Provide clear guidance on how to refactor the change to better fit the architecture if necessary.
 
 ## Scope
 
@@ -39,6 +43,17 @@ Use this checklist when assessing the change:
 - [ ] Does it reuse existing components when appropriate?
 - [ ] Does it avoid adding hidden shared state or global coupling?
 - [ ] Are new modules or services justified by a clear need?
+- [ ] Does it maintain or improve the clarity of the system's structure?
+- [ ] Does it follow established naming and packaging conventions?
+- [ ] Does it respect documented architecture decisions or ADRs?
+- [ ] Does it introduce any new architectural risks or technical debt?
+- [ ] Does it fit within the existing dependency graph without creating cycles?
+- [ ] Does it avoid introducing a new architectural style in a part of the system that is otherwise homogeneous?
+- [ ] Does it maintain the intended separation of concerns between layers and modules?
+- [ ] Does it avoid coupling presentation/UI code directly to persistence or infrastructure?
+- [ ] Does it use established extension points and shared services when possible?
+- [ ] Does it keep public interfaces small and focused?
+- [ ] Does it preserve or clarify the existing dependency direction?
 
 ## Focus Areas
 
@@ -50,6 +65,8 @@ Assess whether the change:
 - avoids adding unrelated responsibilities to existing modules
 - follows the established interface and contract patterns
 - avoids introducing new frameworks, platforms, or paradigms without strong justification
+- does not create new cross-cutting concerns without a clear boundary
+- does not introduce new shared mutable state or global dependencies
 
 ### Layering Discipline
 
@@ -59,6 +76,9 @@ Check for:
 - absence of direct calls from low-level modules to high-level services
 - no bypassing of intended abstraction layers or facades
 - consistent adherence to any documented architecture style (e.g. layered, modular, hexagonal)
+- no new circular dependencies between packages or modules
+- no deep dependency chains across unrelated domains
+- no hidden shared state or global mutable dependencies
 
 ### Abstraction and Interface Quality
 
@@ -77,6 +97,9 @@ Look for:
 - reuse of familiar solution patterns and libraries already in use
 - avoidance of introducing a different architectural style in the same module
 - consistent error handling, configuration, and dependency management
+- inconsistency with similar implementations elsewhere in the codebase
+- unnecessary new patterns, paradigms, or infrastructure assumptions
+- significant coupling, hidden state, or brittle structure that should be revised before merge
 
 ### Structural Integrity
 
@@ -86,6 +109,10 @@ Verify that the change does not create:
 - unintentional runtime coupling between unrelated components
 - deep dependency chains across unrelated domains
 - hidden shared state or global mutable dependencies
+- new architectural style in a part of the system that is otherwise homogeneous
+- coupling presentation/UI code directly to persistence or infrastructure
+- new cross-cutting concerns without a clear boundarys
+- new shared mutable state or global dependencies
 
 ## Evaluation Guidance
 
@@ -97,6 +124,15 @@ Use this when the change:
 - preserves boundaries and dependency direction
 - reuses existing patterns or extends them appropriately
 - presents no significant structural risks
+- is consistent with the overall design and conventions of the codebase
+- does not introduce any new architectural risks or technical debt
+- fits within the existing dependency graph without creating cycles
+- does not introduce a new architectural style in a part of the system that is otherwise homogeneous
+- maintains the intended separation of concerns between layers and modules
+- avoids coupling presentation/UI code directly to persistence or infrastructure
+- uses established extension points and shared services when possible
+- keeps public interfaces small and focused
+- preserves or clarifies the existing dependency direction
 
 ### MINOR_DEVIATION
 
