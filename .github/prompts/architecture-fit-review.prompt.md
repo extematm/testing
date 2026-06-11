@@ -142,6 +142,16 @@ Use this when the change:
 - introduces a minor boundary or convention mismatch
 - may require a modest refactor to align better
 - does not threaten system integrity in the short term
+- could be improved for better architectural fit but is not a critical issue
+- may introduce some technical debt but is manageable with a clear plan for future refactoring
+- may introduce some architectural risks but they are not severe or immediate
+- may create some coupling or complexity but it is not a significant concern
+- may deviate from established patterns but it is not a major issue
+- may introduce a new abstraction that is not fully justified but is not a critical problem
+- may have some inconsistency with similar implementations but it is not a major concern
+- may introduce a minor new dependency but it is not a significant issue
+- may have some minor issues with naming, packaging, or module structure but it is not a major concern
+- may have some minor issues with error handling, configuration, or dependency management but it is not a major concern
 
 ### ARCHITECTURE_VIOLATION
 
