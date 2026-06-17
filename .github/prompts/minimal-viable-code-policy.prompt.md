@@ -142,6 +142,9 @@ Safety, Correctness, and Real-World Constraints (Non-Negotiable)
    Errors must be handled or surfaced explicitly
    Silent failure is disallowed
 5. Real-World Conditions
+   non-ideal conditions must be anticipated and handled
+   minimal code must still be robust against common failure modes
+   real-world constraints must be respected (e.g. performance, memory, latency)
 
 Assume non-ideal systems:
 
