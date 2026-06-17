@@ -100,6 +100,7 @@ Are critical paths testable?
 Red Flags:
 
 No unit/integration tests for core logic
+Use of Emoji or non-standard comments to explain logic instead of code clarity
 Hard-to-mock dependencies
 Non-deterministic outputs without control
 Severity Classification

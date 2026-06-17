@@ -6,8 +6,9 @@ import textwrap
 from datetime import datetime, timedelta, timezone
 
 import requests
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+
+#from reportlab.lib.pagesizes import A4
+#from reportlab.pdfgen import canvas
 
 # -------------------------
 # CONFIG
@@ -16,6 +17,7 @@ from reportlab.pdfgen import canvas
 GITHUB_REPO = "extematm/weekly-summary"
 OLLAMA_MODEL = "qwen:7b"
 OLLAMA_URL = "http://localhost:11434/api/generate"
+REPORTS_DIR = "reports"
 
 
 # -------------------------
@@ -29,14 +31,13 @@ def get_last_week_commits(repo):
     url = f"https://api.github.com/repos/{repo}/commits"
     params = {"since": one_week_ago.isoformat() + "Z"}
     response = requests.get(url, params=params, timeout=10)
-    if response.status_code != 200:
-        raise ValueError(f"GitHub API error: {response.status_code} - {response.text}")
+    response.raise_for_status()
     commits = response.json()
     norway_offset = timedelta(hours=1)
     commit_messages = []
     for commit in commits:
         date_str = commit["commit"]["author"]["date"]
-        dt_utc = datetime.fromisoformat(date_str[:-1]).replace(tzinfo=timezone.utc)
+        dt_utc = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         dt_norway = dt_utc + norway_offset
         human_date = dt_norway.strftime("%Y-%m-%d %H:%M:%S")
         message = commit["commit"]["message"]
@@ -49,9 +50,10 @@ def summarize_commits(commit_text):
     prompt = f"Please answer ONLY in English. Make the summary very structured.\n{commit_text}"
     payload = {"model": OLLAMA_MODEL, "prompt": prompt, "stream": False}
     response = requests.post(OLLAMA_URL, json=payload, timeout=10)
-    if response.status_code != 200:
-        raise requests.HTTPError(f"Ollama API error: {response.status_code} - {response.text}")
+    response.raise_for_status()
     data = response.json()
+    if "response" not in data:
+        raise ValueError(f"Unexpected Ollama response: {data}")
     return data["response"]
 
 
@@ -160,12 +162,12 @@ def save_summary_pdf(summary_text, raw_commits, filename_hint="summary"):
 def main():
     """Main function."""
     print(f"Fetching last week's commits from {GITHUB_REPO}...\n")
-    commits = get_last_week_commits(GITHUB_REPO)
-    print("Raw commit activity:\n", commits, "\n")
+    raw_commits = get_last_week_commits(GITHUB_REPO)
+    print("Raw commit activity:\n", raw_commits, "\n")
     print("----------------------------------------------\n")
-    summary = summarize_commits(commits)
+    summary = raw_commits if raw_commits == "No commits in the last week." else summarize_commits(raw_commits)
     print("Commit Summary:\n", summary)
-    save_summary_pdf(summary, commits)
+    save_summary_pdf(summary, raw_commits)
 
 
 if __name__ == "__main__":
