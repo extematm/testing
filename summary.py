@@ -6,9 +6,8 @@ import textwrap
 from datetime import datetime, timedelta, timezone
 
 import requests
-
-#from reportlab.lib.pagesizes import A4
-#from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 # -------------------------
 # CONFIG
@@ -42,7 +41,11 @@ def get_last_week_commits(repo):
         human_date = dt_norway.strftime("%Y-%m-%d %H:%M:%S")
         message = commit["commit"]["message"]
         commit_messages.append(f"- {human_date}: {message}")
-    return "\n".join(commit_messages) if commit_messages else "No commits in the last week."
+    return (
+        "\n".join(commit_messages)
+        if commit_messages
+        else "No commits in the last week."
+    )
 
 
 def summarize_commits(commit_text):
@@ -116,14 +119,14 @@ def save_summary_pdf(summary_text, raw_commits, filename_hint="summary"):
     y -= 22
     c.setFont("Helvetica", 12)
     y, page_num = draw_wrapped_text(
-    c,
-    summary_text,
-    y,
-    margin,
-    width,
-    height,
-    page_num,
-    max_line_width,
+        c,
+        summary_text,
+        y,
+        margin,
+        width,
+        height,
+        page_num,
+        max_line_width,
     )
 
     y -= 10
@@ -140,14 +143,14 @@ def save_summary_pdf(summary_text, raw_commits, filename_hint="summary"):
     y -= 10
     c.setFont("Helvetica", 12)
     y, page_num = draw_wrapped_text(
-    c,
-    raw_commits,
-    y,
-    margin,
-    width,
-    height,
-    page_num,
-    max_line_width,
+        c,
+        raw_commits,
+        y,
+        margin,
+        width,
+        height,
+        page_num,
+        max_line_width,
     )
     draw_footer(c, width, margin, page_num)
     c.save()
@@ -165,7 +168,11 @@ def main():
     raw_commits = get_last_week_commits(GITHUB_REPO)
     print("Raw commit activity:\n", raw_commits, "\n")
     print("----------------------------------------------\n")
-    summary = raw_commits if raw_commits == "No commits in the last week." else summarize_commits(raw_commits)
+    summary = (
+        raw_commits
+        if raw_commits == "No commits in the last week."
+        else summarize_commits(raw_commits)
+    )
     print("Commit Summary:\n", summary)
     save_summary_pdf(summary, raw_commits)
 
