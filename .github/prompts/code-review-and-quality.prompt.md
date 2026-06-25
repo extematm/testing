@@ -18,6 +18,8 @@ Multi-dimensional code review with quality gates. Every change gets reviewed bef
 - When another agent or model produced code you need to evaluate
 - When refactoring existing code
 - After any bug fix (review both the fix and the regression test)
+- When adding new dependencies or external libraries
+- On critical security-sensitive changes (authentication, authorization, encryption, secrets management)
 
 ## The Five-Axis Review
 
@@ -32,6 +34,9 @@ Does the code do what it claims to do?
 - Are error paths handled (not just the happy path)?
 - Does it pass all tests? Are the tests actually testing the right things?
 - Are there off-by-one errors, race conditions, or state inconsistencies?
+- Are there any assumptions that could break in production (e.g., input format, external service behavior)?
+- Are there any unhandled exceptions or crashes that could occur?
+- Exists any data integrity issues (e.g., missing validation, incorrect calculations, or data corruption)?
 
 ### 2. Readability & Simplicity
 
@@ -55,6 +60,8 @@ Does the change fit the system's design?
 - Is there code duplication that should be shared?
 - Are dependencies flowing in the right direction (no circular dependencies)?
 - Is the abstraction level appropriate (not over-engineered, not too coupled)?
+- Does it respect the single responsibility principle (one class/function does one thing)?
+- Does it introduce unnecessary coupling between modules or layers?
 
 ### 4. Security
 
