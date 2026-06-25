@@ -92,3 +92,8 @@ Evaluate decisions against the following fundamental questions:
 - Call out dependencies and integration costs.
 - Note any existing platform or organizational constraints that influence the choice.
 - Keep the analysis concise but sufficiently detailed for review.
+- Include diagrams or visualizations if they clarify the trade-offs.
+- Consider future-proofing: how will the decision hold up as the system evolves?
+- Validate trade-offs of architectural decisions with real-world data or benchmarks when possible.
+- Validate trade-offs of architectural decisions with online data if possible to look online for benchmarks, case studies, or similar systems.
+- Verify that the chosen option aligns with the team’s skill set and operational capabilities.
