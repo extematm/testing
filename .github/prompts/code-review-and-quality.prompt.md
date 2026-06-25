@@ -102,12 +102,13 @@ For detailed profiling and optimization, see `performance-optimization`. Does th
 Small, focused changes are easier to review, faster to merge, and safer to deploy. Target these sizes:
 
 ```
-~100 lines changed   → Good. Reviewable in one sitting.
-~300 lines changed   → Acceptable if it's a single logical change.
-~1000 lines changed  → Too large. Split it.
+~100 lines changed   → Good. Reviewable in one sitting!
+~300 lines changed   → Acceptable if it's a single logical change!
+~1000 lines changed  → Too large. Split it!
+~3000+ lines changed  → Unacceptable. Split it into multiple changes!
 ```
 
-**What counts as "one change":** A single self-contained modification that addresses one thing, includes related tests, and keeps the system functional after submission. One part of a feature — not the whole feature.
+**What counts as "one change":** A single self-contained modification that addresses one thing, includes related tests, and keeps the system functional after submission. One part of a feature — not the whole feature. Don't bundle unrelated changes together. If a change is too large, split it into smaller, reviewable pieces.
 
 **Splitting strategies when a change is too large:**
 
@@ -120,11 +121,11 @@ Small, focused changes are easier to review, faster to merge, and safer to deplo
 
 **When large changes are acceptable:** Complete file deletions and automated refactoring where the reviewer only needs to verify intent, not every line.
 
-**Separate refactoring from feature work.** A change that refactors existing code and adds new behavior is two changes — submit them separately. Small cleanups (variable renaming) can be included at reviewer discretion.
+**Separate refactoring from feature work.** A change that refactors existing code and adds new behavior is two changes — submit them separately. Small cleanups (variable renaming) can be included at reviewer discretion. Don't bundle unrelated changes together. If a change is too large, split it into smaller, reviewable pieces.
 
 ## Change Descriptions
 
-Every change needs a description that stands alone in version control history.
+Every change needs a description that stands alone in version control history. See `git commit` guidelines for more details. Describe the change in a way that someone searching history can understand it without reading the diff. A good description includes: Purpose, Context, Decisions, Reasoning, and any relevant links (bug numbers, benchmarks, design docs). A good description is a mini-spec for the change.
 
 **First line:** Short, imperative, standalone. "Delete the FizzBuzz RPC" not "Deleting the FizzBuzz RPC." Must be informative enough that someone searching history can understand the change without reading the diff.
 
@@ -142,6 +143,12 @@ Before looking at code, understand the intent:
 - What is this change trying to accomplish?
 - What spec or task does it implement?
 - What is the expected behavior change?
+- What are the constraints (time, budget, team skills, platform)?
+- What are the dependencies (other code, libraries, services)?
+- What are the risks (security, performance, maintainability)?
+- What is the verification story (tests, manual checks, benchmarks)?
+- What is the expected lifetime of this change (temporary, long-term, experimental)?
+- What is the expected evolution path (will it be refactored, extended, or replaced)?
 ```
 
 ### Step 2: Review the Tests First
@@ -154,6 +161,12 @@ Tests reveal intent and coverage:
 - Are edge cases covered?
 - Do tests have descriptive names?
 - Would the tests catch a regression if the code changed?
+- Are there any missing tests for critical paths?
+- Are there any tests that are too brittle or tightly coupled to implementation?
+- Are there any tests that are too slow or resource-intensive?
+- Are there any tests that are flaky or non-deterministic?
+- Are there any tests that are redundant or unnecessary?
+- Are there any tests that are missing assertions or checks?
 ```
 
 ### Step 3: Review the Implementation
@@ -193,6 +206,13 @@ Check the author's verification story:
 - Was the change tested manually?
 - Are there screenshots for UI changes?
 - Is there a before/after comparison?
+- Are there benchmarks for performance changes?
+- Are there any known issues or limitations?
+- Is the verification story documented in the PR or commit message?
+- Are there any conditions that would justify revisiting the decision?
+- Are there any assumptions that could break in production (e.g., input format, external service behavior)?
+- Are there any unhandled exceptions or crashes that could occur?
+- Are there any data integrity issues (e.g., missing validation, incorrect calculations, or data corruption)?
 ```
 
 ## Multi-Model Review Pattern
