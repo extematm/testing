@@ -44,9 +44,9 @@ Store ADRs in `docs/decisions/` with sequential numbering:
 
 Accepted | Superseded by ADR-XXX | Deprecated
 
-## Date
+## Date Format
 
-2025-01-15
+Example format: 2025-01-15
 
 ## Context
 
@@ -56,6 +56,7 @@ We need a primary database for the task management application. Key requirements
 - ACID transactions for task state changes
 - Support for full-text search on task content
 - Managed hosting available (for small team, limited ops capacity)
+- Open-source with a strong ecosystem and community support
 
 ## Decision
 
@@ -87,6 +88,8 @@ Use PostgreSQL with Prisma ORM.
 - We can use PostgreSQL's full-text search instead of adding Elasticsearch
 - Team needs PostgreSQL knowledge (standard skill, low risk)
 - Hosting on managed service (Supabase, Neon, or RDS)
+- We can leverage PostgreSQL's JSONB for any semi-structured data needs
+- We will need to monitor database performance and scale vertically or horizontally as needed
 ```
 
 ### ADR Lifecycle
@@ -97,6 +100,8 @@ PROPOSED → ACCEPTED → (SUPERSEDED or DEPRECATED)
 
 - **Don't delete old ADRs.** They capture historical context.
 - When a decision changes, write a new ADR that references and supersedes the old one.
+- **Keep ADRs concise.** Focus on the decision, context, alternatives, and consequences. Avoid long narratives.
+- **Use ADRs to prevent re-deciding.** Future engineers and agents should understand why a decision was made, what alternatives were considered, and what trade-offs were accepted.
 
 ## Inline Documentation
 
@@ -211,6 +216,13 @@ One-paragraph description of what this project does.
 2. Install dependencies: `npm install`
 3. Set up environment: `cp .env.example .env`
 4. Run the dev server: `npm run dev`
+5. Run tests: `npm test`
+6. Build for production: `npm run build`
+7. Lint code: `npm run lint`
+8. See architecture overview: `docs/architecture.md`
+9. See ADRs for past decisions: `docs/decisions/`
+10. See inline documentation for known gotchas and rules: `docs/CLAUDE.md`
+```
 
 ## Commands
 
@@ -229,7 +241,8 @@ Link to ADRs for details.
 ## Contributing
 
 How to contribute, coding standards, PR process.
-```
+
+````
 
 ## Changelog Maintenance
 
@@ -252,7 +265,7 @@ For shipped features:
 ### Changed
 
 - Task list now loads 50 items per page (was 20) for better UX (#126)
-```
+````
 
 ## Documentation for Agents
 
@@ -293,3 +306,4 @@ After documenting:
 - [ ] Known gotchas are documented inline where they matter
 - [ ] No commented-out code remains
 - [ ] Rules files (CLAUDE.md etc.) are current and accurate
+- [ ] Changelog is updated for shipped features

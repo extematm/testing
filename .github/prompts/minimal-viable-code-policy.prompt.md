@@ -25,6 +25,8 @@ The smallest correct implementation using already-available machinery.
 Not: cutting corners.
 Not: skipping correctness.
 Not: deferring hard problems.
+Not: ignoring real-world constraints.
+Not: avoiding responsibility.
 
 ## When to Use
 
