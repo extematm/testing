@@ -88,11 +88,14 @@ For detailed security guidance, see `security-and-hardening`. Does the change in
 For detailed profiling and optimization, see `performance-optimization`. Does the change introduce performance problems?
 
 - Any N+1 query patterns?
+- Any expensive operations in hot paths (e.g., loops, recursive calls)?
 - Any unbounded loops or unconstrained data fetching?
 - Any synchronous operations that should be async?
 - Any unnecessary re-renders in UI components?
 - Any missing pagination on list endpoints?
 - Any large objects created in hot paths?
+- Any memory leaks or unclosed resources (file handles, DB connections)?
+- Any potential bottlenecks that could be optimized (e.g., caching, indexing, algorithmic improvements)?
 
 ## Change Sizing
 
