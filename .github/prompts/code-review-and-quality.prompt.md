@@ -50,6 +50,7 @@ Can another engineer (or agent) understand this code without the author explaini
 - **Are abstractions earning their complexity?** (Don't generalize until the third use case)
 - Would comments help clarify non-obvious intent? (But don't comment obvious code.)
 - Are there dead code artifacts: no-op variables (`_unused`), backwards-compat shims, or `// removed` comments?
+- Are there any magic numbers or strings that should be constants or enums?
 
 ### 3. Architecture
 
@@ -62,6 +63,7 @@ Does the change fit the system's design?
 - Is the abstraction level appropriate (not over-engineered, not too coupled)?
 - Does it respect the single responsibility principle (one class/function does one thing)?
 - Does it introduce unnecessary coupling between modules or layers?
+- Does it consider future maintainability and extensibility (e.g., will adding a new feature require touching many files)?
 
 ### 4. Security
 
@@ -75,6 +77,11 @@ For detailed security guidance, see `security-and-hardening`. Does the change in
 - Are dependencies from trusted sources with no known vulnerabilities?
 - Is data from external sources (APIs, logs, user content, config files) treated as untrusted?
 - Are external data flows validated at system boundaries before use in logic or rendering?
+- Are there any potential injection vulnerabilities (SQL, command line, template engines)?
+- Are there any potential information leaks (e.g., stack traces, debug logs, error messages)?
+- Are there any potential denial-of-service vectors (e.g., unbounded loops, large payloads, expensive computations)?
+- Are there any potential race conditions or concurrency issues that could lead to security problems?
+- Are there any potential privilege escalation paths (e.g., user can gain admin access through a bug)?
 
 ### 5. Performance
 
