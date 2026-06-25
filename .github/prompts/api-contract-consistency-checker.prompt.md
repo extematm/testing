@@ -71,13 +71,17 @@ This means:
 - old response formats are still parseable,
 - error structures remain consistent,
 - documented behavior does not change unexpectedly.
-- Always consider the consumer's perspective, not just the producer's implementation.
-- Do not assume that all clients are updated in lockstep with API changes.
+- always consider the consumer's perspective, not just the producer's implementation.
+- do not assume that all clients are updated in lockstep with API changes.
+- consider optional fields, default values, and validation rules when evaluating backward compatibility.
+- check that shared schemas or DTOs remain consistent across services and versions.
 
 ### Breaking Change
 
 A breaking change is any modification that may cause at least one existing consumer to fail, behave incorrectly, or receive invalid data.
 Breaking changes usually require versioning, migration instructions, or a compatibility bridge.
+Ensure that breaking changes are clearly documented and communicated to all affected consumers.
+Validate that breaking changes are intentional and necessary, and consider whether they can be avoided or mitigated through additive changes or versioning.
 
 ### Contract Drift
 
@@ -89,6 +93,7 @@ An example is when two services share a Data Transfer Object (DTO) but interpret
 
 Non-backward-compatible changes should be explicit.
 This may mean a new API version, a new endpoint, or a documented migration and deprecation plan.
+Always consider the impact on existing consumers and provide clear guidance for upgrading or migrating to the new contract.
 
 ## Evaluation Criteria
 
