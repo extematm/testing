@@ -35,6 +35,7 @@ Use this prompt to protect API consumers and keep contract changes deliberate.
 - Detecting contract drift between services that rely on the same API or schema
 - Determining whether changes require version bumps, deprecation notices, or migration plans
 - Evaluating API behavior during PR reviews, architecture reviews, or integration validation
+- Verify that changes are additive, backward compatible, and aligned with versioning discipline
 
 ## When NOT to Use
 
@@ -42,11 +43,13 @@ Use this prompt to protect API consumers and keep contract changes deliberate.
 - For performance, style, build-system, or tooling reviews
 - For broad architecture decisions unrelated to API compatibility
 - For documentation tasks that do not concern API contract semantics
+- For general code quality or maintainability reviews unrelated to API contracts
 
 ## Audience and Scope
 
 This prompt is intended for reviewers, architects, and agents checking API compatibility and contract consistency.
 Focus on API surface, consumer-facing behavior, and versioning discipline. Do not treat it as a general code-quality review.
+Do not evaluate internal implementation details, performance optimizations, or unrelated refactors unless they directly affect the API contract.
 
 ## Compatibility Principles
 
@@ -55,6 +58,7 @@ Focus on API surface, consumer-facing behavior, and versioning discipline. Do no
 - Additive changes are safe only when older clients can ignore them.
 - Renames, removals, and incompatible type changes are breaking unless versioned or bridged.
 - Shared schemas and DTOs must remain aligned between producers and consumers.
+- Versioning discipline is essential for non-backward-compatible changes.
 
 ## Key Definitions
 
@@ -67,6 +71,8 @@ This means:
 - old response formats are still parseable,
 - error structures remain consistent,
 - documented behavior does not change unexpectedly.
+- Always consider the consumer's perspective, not just the producer's implementation.
+- Do not assume that all clients are updated in lockstep with API changes.
 
 ### Breaking Change
 
@@ -77,6 +83,7 @@ Breaking changes usually require versioning, migration instructions, or a compat
 
 Contract drift happens when shared API expectations diverge between services or versions.
 This can create compatibility risk even if a single service has not changed its own contract.
+An example is when two services share a Data Transfer Object (DTO) but interpret its fields differently, leading to miscommunication.
 
 ### Versioning Discipline
 
