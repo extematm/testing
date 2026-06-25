@@ -20,6 +20,8 @@ A decision is **non-trivial** when at least one of these is true:
 - It asserts a property the type system or compiler cannot verify (thread safety, idempotence, ordering, invariants)
 - Its correctness depends on context the future reader cannot see
 - Its blast radius is irreversible (production deploy, data migration, public API change)
+- It is a non-obvious claim about the system's behavior, performance, or security
+- It is a non-obvious claim about the system's compliance with a spec, contract, or regulatory requirement
 
 Apply the skill when:
 
@@ -27,6 +29,8 @@ Apply the skill when:
 - About to commit non-trivial code
 - About to claim a non-obvious fact ("this is safe", "this scales", "this matches the spec")
 - Working in code you don't fully understand
+- About to ship a change with irreversible consequences (production, data migration, public API change)
+- About to ship a change with security implications (auth, crypto, secrets, permissions, access control)
 
 **When NOT to use:**
 

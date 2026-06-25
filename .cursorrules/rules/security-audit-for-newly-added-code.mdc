@@ -1,6 +1,6 @@
 ---
 name: security-audit-for-newly-added-code
-description: Performs a structured security audit of newly added or modified code. Use before merging any change that introduces or modifies code paths handling input, data flow, authentication, authorization, dependencies, or external interfaces. Use when reviewing code written by yourself, another agent, or a human to identify vulnerabilities and hardening gaps.
+description: Provides structured security audit guidance for newly added or modified code. Use as a review rubric for code changes that affect input handling, trust boundaries, access control, dependencies, or external interfaces.
 ---
 
 ---
@@ -9,11 +9,11 @@ description: Performs a structured security audit of newly added or modified cod
 
 ## Overview
 
-This is a focused security review process for all code changes. It ensures that every modification is evaluated for security risks before it reaches the main branch.
+This is a focused security review rubric for code changes. It defines the core vulnerability classes, risk signals, and hard-gate rules that should guide a security audit before merge.
 
 Security is treated as a **hard gate for Critical findings** and a **risk-managed decision space for non-critical issues**.
 
-The goal is not theoretical perfection but **preventing exploitable vulnerabilities in production systems**.
+The goal is not theoretical perfection but **finding and preventing exploitable vulnerabilities in production systems**.
 
 ## When to Use
 
@@ -28,7 +28,7 @@ The goal is not theoretical perfection but **preventing exploitable vulnerabilit
 - After implementing features that introduce new data flows
 - After refactoring security-relevant code paths
 - After bug fixes involving access control, injection, or data leakage
-- When reviewing AI-generated or third-party code
+- When evaluating code for security vulnerabilities or audit readiness
 
 ## Security Audit Dimensions
 
@@ -226,10 +226,19 @@ Identify:
 - Entry points (APIs, UI, CLI, webhooks)
 - Data sources (external/internal)
 - Sensitive operations (auth, payments, data access)
+- Privilege boundaries and isolation points
 
 ---
 
 ### Step 2: Trace Data Flow
+
+For each input source:
+
+- Where does it originate?
+- How is it validated?
+- Where does it propagate?
+- Where is it executed or stored?
+- What can an attacker influence?
 
 For each input source:
 
