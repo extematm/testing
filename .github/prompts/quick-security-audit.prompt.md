@@ -24,6 +24,7 @@ Use this when speed matters but security still cannot be skipped.
 - Minor refactors near sensitive code
 - AI-generated code with limited scope
 - Pre-merge sanity check after deeper audits already done
+- **When NOT to use:** Large, complex, or high-risk changes. For those, perform a full security audit.
 
 ---
 
@@ -35,7 +36,7 @@ Use this when speed matters but security still cannot be skipped.
 - [ ] Any raw input directly used in logic, queries, or execution?
 - [ ] Any missing type/format checks on external data?
 
-**Red flag:** raw input used without validation
+**Red flag:** raw input used without validation, escaping, or sanitization
 
 ---
 

@@ -69,6 +69,16 @@ If no necessity → do not implement.
    Prefer single-expression or minimal-expression solutions when readable
    Remove structural overhead if it does not add clarity or safety
 6. Minimal Custom Code
+7. Explicitly Annotated Shortcuts
+   If a simplification is made, annotate it with a ponytail comment explaining:
+   - What was simplified
+   - What limitation it introduces
+   - How it can be upgraded or scaled if needed later
+8. Explicit Verification
+   Any non-trivial logic must include at least one minimal verification mechanism:
+   - assertion
+   - simple runtime check
+   - minimal self-test
 
 ## Only write custom logic when all prior options fail.
 
@@ -95,6 +105,16 @@ Engineering Constraints
    Prefer removing code over adding code
    Prefer simplifying existing logic over extending it
 5. Complexity Bias Rule
+6. Explicit Annotation Requirement
+   Any intentional simplification must be explicitly marked with a ponytail comment:
+   - What was simplified
+   - What limitation it introduces
+   - How it can be upgraded or scaled if needed later
+7. Verification Requirement
+   Any non-trivial logic must include at least one minimal verification mechanism:
+   - assertion
+   - simple runtime check
+   - minimal self-test
 
 ## When multiple valid solutions exist:
 
@@ -147,6 +167,12 @@ Safety, Correctness, and Real-World Constraints (Non-Negotiable)
    non-ideal conditions must be anticipated and handled
    minimal code must still be robust against common failure modes
    real-world constraints must be respected (e.g. performance, memory, latency)
+6. Non-Ideal Systems
+   Assume partial failure
+   Assume clock drift
+   Assume network unreliability
+   Assume hardware inaccuracies
+7. Verification Requirement
 
 Assume non-ideal systems:
 
